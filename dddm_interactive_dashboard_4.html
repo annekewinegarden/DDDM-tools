@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDDM Board Decision Simulator</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #0066ff;
+            --secondary: #00d4aa;
+            --accent: #ff6b35;
+            --success: #00c851;
+            --warning: #ffbb33;
+            --danger: #ff4444;
+            --dark: #1a1d29;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --surface: #ffffff;
+            --surface-dark: #2d3748;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--dark);
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #fff, #e2e8f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: glow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.3)); }
+            to { filter: drop-shadow(0 0 30px rgba(255, 255, 255, 0.6)); }
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .game-board {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(20px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-board::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+            animation: progress-shimmer 2s infinite;
+        }
+
+        @keyframes progress-shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .scenario-header {
+            background: linear-gradient(135deg, var(--dark), var(--surface-dark));
+            color: white;
+            padding: 2rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scenario-header::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 212, 170, 0.1));
+        }
+
+        .scenario-title {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .scenario-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.8;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .pillars-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .pillar {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 2px solid transparent;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pillar:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .pillar.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 30px rgba(0, 102, 255, 0.2);
+        }
+
+        .pillar.completed {
+            border-color: var(--success);
+            background: linear-gradient(135deg, #f0fff4, #dcfce7);
+        }
+
+        .pillar-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .pillar-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 1.5rem;
+            color: white;
+            font-weight: bold;
+        }
+
+        .pillar-1 .pillar-icon { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .pillar-2 .pillar-icon { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .pillar-3 .pillar-icon { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+        .pillar-4 .pillar-icon { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+
+        .pillar-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .pillar-description {
+            color: var(--gray);
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .pillar-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease;
+        }
+
+        .pillar.active .pillar-content {
+            max-height: 1000px;
+        }
+
+        .metric-card {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-left: 4px solid var(--primary);
+            position: relative;
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-title {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .metric-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .detail-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .detail-btn:hover {
+            background: #0052cc;
+            transform: scale(1.05);
+        }
+
+        .detail-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 1001;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .detail-popup.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .detail-popup h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+        }
+
+        .data-source {
+            background: #1a1d29;
+            color: #00d4aa;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        .methodology {
+            color: var(--gray);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-bar {
+            background: #e2e8f0;
+            border-radius: 10px;
+            height: 8px;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.8s ease;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), #4c51bf);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 102, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .insight-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 90%;
+            z-index: 1000;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .insight-popup.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .completion-score {
+            text-align: center;
+            margin: 2rem 0;
+            padding: 2rem;
+            background: linear-gradient(135deg, #f0fff4, #dcfce7);
+            border-radius: 16px;
+            border: 2px solid var(--success);
+        }
+
+        .score-value {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--success);
+            margin-bottom: 0.5rem;
+        }
+
+        .data-visualization {
+            background: #1a1d29;
+            border-radius: 12px;
+            padding: 1rem;
+            margin: 1rem 0;
+            color: white;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .chart-bar {
+            display: flex;
+            align-items: center;
+            margin: 0.5rem 0;
+        }
+
+        .chart-label {
+            width: 120px;
+            font-size: 0.9rem;
+        }
+
+        .chart-fill {
+            height: 20px;
+            background: linear-gradient(90deg, var(--secondary), var(--primary));
+            border-radius: 4px;
+            margin-left: 1rem;
+            transition: width 1s ease;
+        }
+
+        .floating-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: float 6s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0; }
+            50% { transform: translateY(-100px) rotate(180deg); opacity: 1; }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @media (max-width: 768px) {
+            .pillars-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-particles"></div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>🎯 DDDM Board Decision Simulator</h1>
+            <p class="subtitle">Navigate through the Four Pillars of Data-Driven Decision Making</p>
+        </div>
+
+        <div class="game-board">
+            <div class="scenario-header">
+                <h2 class="scenario-title">🚀 Mission: European Market Expansion</h2>
+                <p class="scenario-subtitle">MedTech Innovations Inc. • $50M Investment Decision • Q2 2025</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="overallProgress"></div>
+                </div>
+            </div>
+
+            <div class="pillars-container">
+                <!-- Pillar 1: Decision Quality Analytics -->
+                <div class="pillar pillar-1" data-pillar="1">
+                    <div class="pillar-header">
+                        <div class="pillar-icon">📊</div>
+                        <div>
+                            <div class="pillar-title">Decision Quality Analytics</div>
+                        </div>
+                    </div>
+                    <div class="pillar-description">
+                        Evaluate whether board decisions achieve their intended outcomes using historical data and predictive modeling.
+                    </div>
+                    <div class="pillar-content">
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <div class="metric-title">Historical Success Rate</div>
+                                <button class="detail-btn" onclick="showDetail('Historical Success Rate', 'metric1', event)">Details</button>
+                            </div>
+                            <div class="metric-value">67% (2 of 3 expansions succeeded)</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <div class="metric-title">Predicted Success Probability</div>
+                                <button class="detail-btn" onclick="showDetail('Predicted Success Probability', 'metric2', event)">Details</button>
+                            </div>
+                            <div class="metric-value">73% (based on current conditions)</div>
+                        </div>
+                        <div class="data-visualization">
+                            <div>Past Expansions Performance:</div>
+                            <div class="chart-bar">
+                                <span class="chart-label">Asia 2019</span>
+                                <div class="chart-fill" style="width: 85%;"></div>
+                                <span style="margin-left: 10px;">85%</span>
+                            </div>
+                            <div class="chart-bar">
+                                <span class="chart-label">Canada 2021</span>
+                                <div class="chart-fill" style="width: 120%;"></div>
+                                <span style="margin-left: 10px;">120%</span>
+                            </div>
+                            <div class="chart-bar">
+                                <span class="chart-label">Australia 2023</span>
+                                <div class="chart-fill" style="width: 60%;"></div>
+                                <span style="margin-left: 10px;">60%</span>
+                            </div>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="revealInsight(1)">Analyze Patterns</button>
+                            <button class="btn btn-secondary" onclick="showDetail('Chart Methodology', 'chart-methodology', event)">Chart Methodology</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pillar 2: Risk Intelligence -->
+                <div class="pillar pillar-2" data-pillar="2">
+                    <div class="pillar-header">
+                        <div class="pillar-icon">🛡️</div>
+                        <div>
+                            <div class="pillar-title">Risk Intelligence</div>
+                        </div>
+                    </div>
+                    <div class="pillar-description">
+                        Enhance ability to anticipate and respond to emerging risks through early warning systems and predictive analytics.
+                    </div>
+                    <div class="pillar-content">
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <div class="metric-title">Risk Prediction Accuracy</div>
+                                <button class="detail-btn" onclick="showDetail('Risk Prediction Accuracy', 'risk-metric1', event)">Details</button>
+                            </div>
+                            <div class="metric-value">90%+ target achieved</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <div class="metric-title">Early Warning Alerts</div>
+                                <button class="detail-btn" onclick="showDetail('Early Warning Alerts', 'risk-metric2', event)">Details</button>
+                            </div>
+                            <div class="metric-value">3 active regulatory risks detected</div>
+                        </div>
+                        <div class="data-visualization">
+                            <div>Risk Assessment Dashboard:</div>
+                            <div class="chart-bar">
+                                <span class="chart-label">Regulatory</span>
+                                <div class="chart-fill" style="width: 72%; background: linear-gradient(90deg, #ffbb33, #ff6b35);"></div>
+                                <span style="margin-left: 10px;">7.2/10</span>
+                            </div>
+                            <div class="chart-bar">
+                                <span class="chart-label">Currency</span>
+                                <div class="chart-fill" style="width: 65%; background: linear-gradient(90deg, #ffbb33, #ff6b35);"></div>
+                                <span style="margin-left: 10px;">6.5/10</span>
+                            </div>
+                            <div class="chart-bar">
+                                <span class="chart-label">Competition</span>
+                                <div class="chart-fill" style="width: 65%; background: linear-gradient(90deg, #ffbb33, #ff6b35);"></div>
+                                <span style="margin-left: 10px;">65% reaction probability</span>
+                            </div>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="revealInsight(2)">Risk Deep Dive</button>
+                            <button class="btn btn-secondary" onclick="showDetail('Risk Scoring Model', 'risk-methodology', event)">Risk Scoring</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pillar 3: Strategic Value Creation -->
+                <div class="pillar pillar-3" data-pillar="3">
+                    <div class="pillar-header">
+                        <div class="pillar-icon">💎</div>
+                        <div>
+                            <div class="pillar-title">Strategic Value Creation</div>
+                        </div>
+                    </div>
+                    <div class="pillar-description">
+                        Move beyond single metrics to comprehensive value creation monitoring across all stakeholders.
+                    </div>
+                    <div class="pillar-content">
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <div class="metric-title">3-Year NPV</div>
+                                <button class="detail-btn" onclick="showDetail('3-Year NPV Analysis', 'value-metric1', event)">Details</button>
+                            </div>
+                            <div class="metric-value">$75M (18% IRR)</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <div class="metric-title">Multi-Stakeholder Score</div>
+                                <button class="detail-btn" onclick="showDetail('Multi-Stakeholder Value Framework', 'value-metric2', event)">Details</button>
+                            </div>
+                            <div class="metric-value">8.4/10 across 6 dimensions</div>
+                        </div>
+                        <div class="data-visualization">
+                            <div>Value Creation Matrix:</div>
+                            <div class="chart-bar">
+                                <span class="chart-label">Financial</span>
+                                <div class="chart-fill" style="width: 85%;"></div>
+                                <span style="margin-left: 10px;">$75M NPV</span>
+                            </div>
+                            <div class="chart-bar">
+                                <span class="chart-label">Innovation</span>
+                                <div class="chart-fill" style="width: 90%;"></div>
+                                <span style="margin-left: 10px;">12 partnerships</span>
+                            </div>
+                            <div class="chart-bar">
+                                <span class="chart-label">Talent</span>
+                                <div class="chart-fill" style="width: 95%;"></div>
+                                <span style="margin-left: 10px;">350 jobs</span>
+                            </div>
+                            <div class="chart-bar">
+                                <span class="chart-label">Customer</span>
+                                <div class="chart-fill" style="width: 88%;"></div>
+                                <span style="margin-left: 10px;">2.5M patients</span>
+                            </div>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="revealInsight(3)">Value Analysis</button>
+                            <button class="btn btn-secondary" onclick="showDetail('Value Creation Model', 'value-methodology', event)">Value Model</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pillar 4: Process Optimization -->
+                <div class="pillar pillar-4" data-pillar="4">
+                    <div class="pillar-header">
+                        <div class="pillar-icon">⚙️</div>
+                        <div>
+                            <div class="pillar-title">Process Optimization</div>
+                        </div>
+                    </div>
+                    <div class="pillar-description">
+                        Improve how the board operates - the quality of information and effectiveness of meeting time.
+                    </div>
+                    <div class="pillar-content">
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <div class="metric-title">Information Quality Index</div>
+                                <button class="detail-btn" onclick="showDetail('Information Quality Assessment', 'process-metric1', event)">Details</button>
+                            </div>
+                            <div class="metric-value">8.25/10 (Target: 8.5)</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <div class="metric-title">Strategic Discussion Time</div>
+                                <button class="detail-btn" onclick="showDetail('Meeting Time Analysis', 'process-metric2', event)">Details</button>
+                            </div>
+                            <div class="metric-value">75% (exceeds 70% target)</div>
+                        </div>
+                        <div class="data-visualization">
+                            <div>Process Metrics:</div>
+                            <div class="chart-bar">
+                                <span class="chart-label">Relevance</span>
+                                <div class="chart-fill" style="width: 90%;"></div>
+                                <span style="margin-left: 10px;">9/10</span>
+                            </div>
+                            <div class="chart-bar">
+                                <span class="chart-label">Timeliness</span>
+                                <div class="chart-fill" style="width: 70%;"></div>
+                                <span style="margin-left: 10px;">7/10</span>
+                            </div>
+                            <div class="chart-bar">
+                                <span class="chart-label">Accuracy</span>
+                                <div class="chart-fill" style="width: 90%;"></div>
+                                <span style="margin-left: 10px;">9/10</span>
+                            </div>
+                            <div class="chart-bar">
+                                <span class="chart-label">Completeness</span>
+                                <div class="chart-fill" style="width: 80%;"></div>
+                                <span style="margin-left: 10px;">8/10</span>
+                            </div>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="revealInsight(4)">Process Review</button>
+                            <button class="btn btn-secondary" onclick="showDetail('Quality Framework', 'process-methodology', event)">Quality Framework</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="completionScore" class="completion-score" style="display: none;">
+                <div class="score-value">94/100</div>
+                <h3>🎉 Excellent Decision Quality Score!</h3>
+                <p>Your data-driven approach significantly improves the probability of a successful expansion decision.</p>
+                <button class="btn btn-primary" onclick="resetSimulation()">Try Another Scenario</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+    <div class="insight-popup" id="insightPopup">
+        <h3 id="insightTitle"></h3>
+        <p id="insightContent"></p>
+        <button class="btn btn-primary" onclick="closeInsight(); event.stopPropagation();">Continue</button>
+    </div>
+
+    <div class="detail-popup" id="detailPopup">
+        <h3 id="detailTitle"></h3>
+        <div id="detailContent"></div>
+        <button class="btn btn-primary" onclick="closeDetail(); event.stopPropagation();">Close</button>
+    </div>
+
+    <script>
+        let completedPillars = 0;
+        const totalPillars = 4;
+
+        const insights = {
+            1: {
+                title: "🎯 Decision Quality Insight",
+                content: "Pattern analysis reveals that expansions with strong regulatory environments (like Canada) outperform by 35%. Current European regulatory stability score of 7.2/10 suggests moderate confidence. Key success factor: phased approach reduces risk while maintaining upside potential."
+            },
+            2: {
+                title: "🛡️ Risk Intelligence Alert",
+                content: "Early warning system detected: 90% probability of new EU medical device regulations within 18 months. Recommendation: Build regulatory compliance buffer into timeline and budget. Estimated additional cost: €2.3M, but prevents potential €15M in delays."
+            },
+            3: {
+                title: "💎 Strategic Value Discovery",
+                content: "Multi-stakeholder analysis reveals hidden value: European talent acquisition could solve critical US engineering shortage worth $25M annually. Innovation partnerships provide platform for future $200M+ opportunities. Total strategic value: 2.3x financial projections."
+            },
+            4: {
+                title: "⚙️ Process Optimization Opportunity",
+                content: "Information quality analysis shows timeliness gap: market data averaging 3 months old. Recommendation: Implement real-time dashboard for 15% improvement in decision speed and 25% increase in accuracy. ROI: $5M over 3 years."
+            }
+        };
+
+        function initializeParticles() {
+            const container = document.querySelector('.floating-particles');
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.animationDuration = (6 + Math.random() * 4) + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        document.querySelectorAll('.pillar').forEach(pillar => {
+            pillar.addEventListener('click', function() {
+                const isActive = this.classList.contains('active');
+                
+                // Close all pillars
+                document.querySelectorAll('.pillar').forEach(p => p.classList.remove('active'));
+                
+                // Open clicked pillar if it wasn't active
+                if (!isActive) {
+                    this.classList.add('active');
+                    this.classList.add('pulse');
+                    setTimeout(() => this.classList.remove('pulse'), 2000);
+                }
+            });
+        });
+
+        const detailData = {
+            'metric1': {
+                title: 'Historical Success Rate',
+                content: `
+                    <div class="methodology">
+                        <strong>Methodology:</strong> Success measured by achieving >80% of projected revenue targets within 24 months of market entry.
+                    </div>
+                    <div class="data-source">
+                        <strong>📊 Data Sources:</strong><br>
+                        • Internal expansion tracking system (2019-2023)<br>
+                        • Post-decision review reports (6, 12, 24 month intervals)<br>
+                        • Financial performance vs. business case projections<br>
+                        • Market penetration rate analysis
+                    </div>
+                `
+            },
+            'metric2': {
+                title: 'Predicted Success Probability',
+                content: `
+                    <div class="methodology">
+                        <strong>Methodology:</strong> Machine learning model trained on 47 international expansion cases (internal + industry benchmarks). Factors: market maturity, regulatory stability, competitive landscape, team experience.
+                    </div>
+                    <div class="data-source">
+                        <strong>🤖 Predictive Model:</strong><br>
+                        • Historical expansion database (n=47)<br>
+                        • Regulatory environment scoring (EU Medical Device Regulation)<br>
+                        • Market readiness indicators (customer survey data)<br>
+                        • Team capability assessment matrix
+                    </div>
+                `
+            },
+            'chart-methodology': {
+                title: 'Chart Methodology',
+                content: `
+                    <div class="methodology">
+                        <strong>Methodology:</strong> Performance calculated as: (Actual Revenue Year 2 / Projected Revenue Year 2) × 100. 
+                        Asia succeeded due to strong partnerships; Canada exceeded via faster-than-expected adoption; 
+                        Australia struggled with regulatory delays and competitive response.
+                    </div>
+                    <div class="data-source">
+                        <strong>📈 Chart Data Sources:</strong><br>
+                        • Quarterly revenue reports (2019-2023)<br>
+                        • Original business case projections<br>
+                        • Market penetration tracking<br>
+                        • Post-mortem analysis reports
+                    </div>
+                `
+            },
+            'risk-metric1': {
+                title: 'Risk Prediction Accuracy',
+                content: `
+                    <div class="methodology">
+                        <strong>Methodology:</strong> Early warning system correctly identified 27 of 30 material risks in the past 18 months, with average 45-day lead time before impact materialization.
+                    </div>
+                    <div class="data-source">
+                        <strong>🎯 Risk Tracking System:</strong><br>
+                        • Regulatory monitoring APIs (EU, FDA databases)<br>
+                        • Industry intelligence feeds (MedTech sector)<br>
+                        • Competitive activity tracking<br>
+                        • Economic indicator dashboard (currency, interest rates)
+                    </div>
+                `
+            },
+            'risk-metric2': {
+                title: 'Early Warning Alerts',
+                content: `
+                    <div class="methodology">
+                        <strong>Methodology:</strong> Active monitoring of 156 risk indicators across regulatory, competitive, economic, and operational categories. Alerts triggered when indicators exceed threshold levels.
+                    </div>
+                    <div class="data-source">
+                        <strong>🚨 Current Alert Sources:</strong><br>
+                        • EU Medical Device Regulation updates (Q2 2025)<br>
+                        • Brexit trade agreement modifications<br>
+                        • Competitive intelligence (3 major competitors expanding)<br>
+                        • Currency volatility indicators (EUR/USD fluctuations)
+                    </div>
+                `
+            },
+            'risk-methodology': {
+                title: 'Risk Scoring Model',
+                content: `
+                    <div class="methodology">
+                        <strong>Methodology:</strong> Risk scores calculated using weighted composite indices: Regulatory (policy stability, approval timelines), Currency (volatility measures, hedging costs), Competition (market share threats, response likelihood based on historical patterns).
+                    </div>
+                    <div class="data-source">
+                        <strong>⚖️ Risk Scoring Models:</strong><br>
+                        • Regulatory: Policy tracker + approval timeline analysis<br>
+                        • Currency: 90-day volatility + forward rates<br>
+                        • Competition: Game theory models + historical response data<br>
+                        • Real-time updates from 12 external data providers
+                    </div>
+                `
+            },
+            'value-metric1': {
+                title: '3-Year NPV Analysis',
+                content: `
+                    <div class="methodology">
+                        <strong>Methodology:</strong> DCF model using 12% WACC, 3-year revenue ramp (Year 1: $15M, Year 2: $35M, Year 3: $52M), 
+                        25% operating margin by Year 3. Risk-adjusted using Monte Carlo simulation (1000 iterations).
+                    </div>
+                    <div class="data-source">
+                        <strong>💰 Financial Model Inputs:</strong><br>
+                        • Market sizing: EU MedTech TAM $28B (2024)<br>
+                        • Customer acquisition costs: $2,500 per enterprise client<br>
+                        • Pricing analysis: 15% premium vs. US market<br>
+                        • Operating expense projections (3-year build-up)
+                    </div>
+                `
+            },
+            'value-metric2': {
+                title: 'Multi-Stakeholder Value Framework',
+                content: `
+                    <div class="methodology">
+                        <strong>Methodology:</strong> Weighted scoring model evaluating Financial (25%), Innovation (20%), Talent (15%), 
+                        Customer (20%), Community (10%), Regulatory (10%) value creation. Each dimension scored 1-10.
+                    </div>
+                    <div class="data-source">
+                        <strong>🎯 Stakeholder Value Sources:</strong><br>
+                        • Financial: NPV and IRR calculations<br>
+                        • Innovation: R&D partnership pipeline analysis<br>
+                        • Talent: EU engineering market salary data<br>
+                        • Customer: Patient outcome improvement studies<br>
+                        • Community: Economic impact modeling<br>
+                        • Regulatory: Compliance capability assessment
+                    </div>
+                `
+            },
+            'value-methodology': {
+                title: 'Value Creation Model',
+                content: `
+                    <div class="methodology">
+                        <strong>Methodology:</strong> Multi-stakeholder value quantified using: Financial (traditional DCF), Innovation (patent pipeline value), 
+                        Talent (strategic hiring capability), Customer (health outcome improvements), Community (job creation multiplier), 
+                        Regulatory (compliance platform value).
+                    </div>
+                    <div class="data-source">
+                        <strong>🏗️ Value Creation Data:</strong><br>
+                        • Innovation: 12 signed LOIs worth $45M potential<br>
+                        • Talent: 45 pre-qualified EU engineers (vs 6-month US shortage)<br>
+                        • Customer: Pilot shows 23% outcome improvement<br>
+                        • Community: 2.1x economic multiplier (350 direct + 735 indirect jobs)
+                    </div>
+                `
+            },
+            'process-metric1': {
+                title: 'Information Quality Assessment',
+                content: `
+                    <div class="methodology">
+                        <strong>Methodology:</strong> Composite score across 4 dimensions: Relevance (9/10), Timeliness (7/10), Accuracy (9/10), 
+                        Completeness (8/10). Weighted average based on board member surveys and objective measures.
+                    </div>
+                    <div class="data-source">
+                        <strong>📋 Information Assessment:</strong><br>
+                        • Board material analysis (content scoring rubric)<br>
+                        • Data freshness tracking (average age: 45 days)<br>
+                        • Third-party validation rates (92% accuracy)<br>
+                        • Board member feedback surveys (monthly)
+                    </div>
+                `
+            },
+            'process-metric2': {
+                title: 'Meeting Time Analysis',
+                content: `
+                    <div class="methodology">
+                        <strong>Methodology:</strong> Meeting time allocation tracked via automated transcription analysis. Strategic discussions defined as 
+                        forward-looking decisions requiring board judgment vs. routine reporting/compliance items.
+                    </div>
+                    <div class="data-source">
+                        <strong>⏱️ Meeting Analytics:</strong><br>
+                        • Automated agenda time tracking<br>
+                        • Discussion topic classification (NLP analysis)<br>
+                        • Action item completion rates (95%)<br>
+                        • Board effectiveness surveys (quarterly)
+                    </div>
+                `
+            },
+            'process-methodology': {
+                title: 'Quality Framework',
+                content: `
+                    <div class="methodology">
+                        <strong>Methodology:</strong> Information Quality Framework: Relevance (strategic alignment, decision support value), 
+                        Timeliness (data freshness, delivery schedule), Accuracy (validation processes, error rates), 
+                        Completeness (coverage of key dimensions, scenario analysis depth).
+                    </div>
+                    <div class="data-source">
+                        <strong>🎯 Quality Improvement:</strong><br>
+                        • Gap analysis: Timeliness needs real-time dashboard<br>
+                        • Best practice: Canada expansion had highest info quality (9.2)<br>
+                        • Recommendation: Monthly data refresh cycles<br>
+                        • Target: Achieve 8.5+ by implementing live market feeds
+                    </div>
+                `
+            }
+        };
+
+        function showDetail(title, detailKey, event) {
+            // Prevent the click from bubbling up to the pillar
+            if (event) {
+                event.stopPropagation();
+            }
+            
+            const detail = detailData[detailKey];
+            if (detail) {
+                document.getElementById('detailTitle').textContent = title;
+                document.getElementById('detailContent').innerHTML = detail.content;
+                
+                document.getElementById('overlay').classList.add('show');
+                document.getElementById('detailPopup').classList.add('show');
+            }
+        }
+
+        function closeDetail() {
+            document.getElementById('overlay').classList.remove('show');
+            document.getElementById('detailPopup').classList.remove('show');
+        }
+
+        function closeInsight() {
+            document.getElementById('overlay').classList.remove('show');
+            document.getElementById('insightPopup').classList.remove('show');
+            
+            if (completedPillars === totalPillars) {
+                setTimeout(() => {
+                    document.getElementById('completionScore').style.display = 'block';
+                    document.getElementById('completionScore').scrollIntoView({ behavior: 'smooth' });
+                }, 500);
+            }
+        }
+
+        function toggleDetails(detailId) {
+            // Legacy function - redirect to popup system
+            showDetail('Details', detailId);
+        }
+
+        function revealInsight(pillarNumber) {
+            const insight = insights[pillarNumber];
+            document.getElementById('insightTitle').textContent = insight.title;
+            document.getElementById('insightContent').textContent = insight.content;
+            
+            document.getElementById('overlay').classList.add('show');
+            document.getElementById('insightPopup').classList.add('show');
+            
+            // Mark pillar as completed
+            const pillar = document.querySelector(`[data-pillar="${pillarNumber}"]`);
+            if (!pillar.classList.contains('completed')) {
+                pillar.classList.add('completed');
+                completedPillars++;
+                updateProgress();
+            }
+        }
+
+        function closeInsight() {
+            document.getElementById('overlay').classList.remove('show');
+            document.getElementById('insightPopup').classList.remove('show');
+            
+            if (completedPillars === totalPillars) {
+                setTimeout(() => {
+                    document.getElementById('completionScore').style.display = 'block';
+                    document.getElementById('completionScore').scrollIntoView({ behavior: 'smooth' });
+                }, 500);
+            }
+        }
+
+        function updateProgress() {
+            const progress = (completedPillars / totalPillars) * 100;
+            document.getElementById('overallProgress').style.width = progress + '%';
+        }
+
+        function resetSimulation() {
+            completedPillars = 0;
+            document.querySelectorAll('.pillar').forEach(pillar => {
+                pillar.classList.remove('completed', 'active');
+            });
+            document.getElementById('completionScore').style.display = 'none';
+            updateProgress();
+        }
+
+        // Initialize the simulation
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeParticles();
+            
+            // Auto-open first pillar with delay
+            setTimeout(() => {
+                document.querySelector('.pillar-1').classList.add('active');
+                document.querySelector('.pillar-1').classList.add('pulse');
+                setTimeout(() => document.querySelector('.pillar-1').classList.remove('pulse'), 2000);
+            }, 1000);
+        });
+
+        // Add click outside to close pillars
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.pillar')) {
+                document.querySelectorAll('.pillar').forEach(p => p.classList.remove('active'));
+            }
+        });
+
+        // Overlay click to close popup
+        document.getElementById('overlay').addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevent this from bubbling to document click
+            if (document.getElementById('detailPopup').classList.contains('show')) {
+                closeDetail();
+            } else {
+                closeInsight();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick DDDM Decision Check - 5 Minutes</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+        
+        :root {
+            --primary: #2563eb;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --success: #22c55e;
+            --warning: #ef4444;
+            --dark: #1f2937;
+            --light: #f9fafb;
+            --gray: #6b7280;
+            --surface: #ffffff;
+            --border: #e5e7eb;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f0f9ff 100%);
+            min-height: 100vh;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px var(--shadow);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .time-badge {
+            background: var(--success);
+            color: white;
+            padding: 0.25rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .subtitle {
+            color: var(--gray);
+            font-size: 1rem;
+        }
+
+        .quick-form {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px var(--shadow);
+            overflow: hidden;
+        }
+
+        .form-section {
+            padding: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .form-section:last-child {
+            border-bottom: none;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .pillar-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .section-1 .pillar-icon { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .section-2 .pillar-icon { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .section-3 .pillar-icon { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+        .section-4 .pillar-icon { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .section-subtitle {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .quick-select {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .select-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            background: var(--light);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .select-option:hover {
+            border-color: var(--primary);
+            background: white;
+        }
+
+        .select-option input {
+            accent-color: var(--primary);
+        }
+
+        .slider-group {
+            margin: 1rem 0;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--border);
+            outline: none;
+            -webkit-appearance: none;
+            margin: 1rem 0;
+        }
+
+        .slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+
+        .slider-value {
+            text-align: center;
+            font-weight: 600;
+            color: var(--primary);
+            margin-top: 0.5rem;
+        }
+
+        .submit-section {
+            background: linear-gradient(135deg, var(--primary), #3b82f6);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            font-size: 1.1rem;
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 255, 255, 0.4);
+        }
+
+        .results {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px var(--shadow);
+            margin-top: 2rem;
+            overflow: hidden;
+        }
+
+        .results.show {
+            display: block;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .results-header {
+            background: linear-gradient(135deg, var(--success), #16a34a);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .score-display {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .score-label {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .insights {
+            padding: 2rem;
+        }
+
+        .insight-item {
+            background: linear-gradient(135deg, #f8fafc, white);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .insight-title {
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .insight-content {
+            color: var(--gray);
+            font-size: 0.95rem;
+        }
+
+        .action-items {
+            background: #fffbeb;
+            border: 2px solid #fbbf24;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .action-title {
+            color: #d97706;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .action-list {
+            list-style: none;
+        }
+
+        .action-list li {
+            padding: 0.5rem 0;
+            color: #92400e;
+            position: relative;
+            padding-left: 1.5rem;
+        }
+
+        .action-list li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: #d97706;
+            font-weight: bold;
+        }
+
+        .try-again {
+            text-align: center;
+            margin-top: 2rem;
+            padding: 1rem;
+        }
+
+        .btn-secondary {
+            background: var(--light);
+            color: var(--gray);
+            border: 2px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .form-section {
+                padding: 1.5rem;
+            }
+            
+            .quick-select {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="time-badge">⚡ 5-Minute Quick Check</div>
+            <h1>🎯 DDDM Decision Readiness</h1>
+            <p class="subtitle">Get instant feedback on your decision-making approach</p>
+        </div>
+
+        <div class="quick-form" id="quickForm">
+            <!-- Decision Input -->
+            <div class="form-section">
+                <div class="form-group">
+                    <label class="form-label">What decision are you making?</label>
+                    <textarea class="form-input form-textarea" id="decision" placeholder="Example: Should I pivot my startup's business model from B2C to B2B?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Impact level:</label>
+                    <div class="quick-select">
+                        <label class="select-option">
+                            <input type="radio" name="impact" value="low">
+                            <span>Low - Easily reversible</span>
+                        </label>
+                        <label class="select-option">
+                            <input type="radio" name="impact" value="high">
+                            <span>High - Major consequences</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pillar 1: Decision Quality -->
+            <div class="form-section section-1">
+                <div class="section-header">
+                    <div class="pillar-icon">📊</div>
+                    <div>
+                        <div class="section-title">Decision Quality</div>
+                        <div class="section-subtitle">How will you measure success?</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Do you have clear success metrics?</label>
+                    <div class="slider-group">
+                        <input type="range" min="1" max="10" value="5" class="slider" id="metrics-clarity">
+                        <div class="slider-labels">
+                            <span>Vague goals</span>
+                            <span>Crystal clear metrics</span>
+                        </div>
+                        <div class="slider-value" id="metrics-value">5/10</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Main success indicator:</label>
+                    <input type="text" class="form-input" id="main-metric" placeholder="e.g., 30% revenue increase, 50 new customers, etc.">
+                </div>
+            </div>
+
+            <!-- Pillar 2: Risk Intelligence -->
+            <div class="form-section section-2">
+                <div class="section-header">
+                    <div class="pillar-icon">🛡️</div>
+                    <div>
+                        <div class="section-title">Risk Intelligence</div>
+                        <div class="section-subtitle">What could go wrong?</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Biggest risk to this decision:</label>
+                    <textarea class="form-input form-textarea" id="main-risk" placeholder="What's the one thing that could derail this decision?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">How likely is this risk?</label>
+                    <div class="quick-select">
+                        <label class="select-option">
+                            <input type="radio" name="risk-probability" value="low">
+                            <span>Low (&lt;20%)</span>
+                        </label>
+                        <label class="select-option">
+                            <input type="radio" name="risk-probability" value="medium">
+                            <span>Medium (20-60%)</span>
+                        </label>
+                        <label class="select-option">
+                            <input type="radio" name="risk-probability" value="high">
+                            <span>High (&gt;60%)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pillar 3: Value Creation -->
+            <div class="form-section section-3">
+                <div class="section-header">
+                    <div class="pillar-icon">💎</div>
+                    <div>
+                        <div class="section-title">Value Creation</div>
+                        <div class="section-subtitle">Who benefits and how?</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Key stakeholders affected:</label>
+                    <div class="quick-select">
+                        <label class="select-option">
+                            <input type="checkbox" name="stakeholders" value="customers">
+                            <span>Customers</span>
+                        </label>
+                        <label class="select-option">
+                            <input type="checkbox" name="stakeholders" value="team">
+                            <span>Team/Employees</span>
+                        </label>
+                        <label class="select-option">
+                            <input type="checkbox" name="stakeholders" value="investors">
+                            <span>Investors</span>
+                        </label>
+                        <label class="select-option">
+                            <input type="checkbox" name="stakeholders" value="partners">
+                            <span>Partners</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Strategic alignment:</label>
+                    <div class="slider-group">
+                        <input type="range" min="1" max="10" value="5" class="slider" id="strategic-fit">
+                        <div class="slider-labels">
+                            <span>Doesn't fit strategy</span>
+                            <span>Perfect alignment</span>
+                        </div>
+                        <div class="slider-value" id="strategy-value">5/10</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pillar 4: Process Quality -->
+            <div class="form-section section-4">
+                <div class="section-header">
+                    <div class="pillar-icon">⚙️</div>
+                    <div>
+                        <div class="section-title">Process Quality</div>
+                        <div class="section-subtitle">How good is your decision process?</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Do you have enough information to decide?</label>
+                    <div class="slider-group">
+                        <input type="range" min="1" max="10" value="5" class="slider" id="information-quality">
+                        <div class="slider-labels">
+                            <span>Missing key data</span>
+                            <span>Have everything needed</span>
+                        </div>
+                        <div class="slider-value" id="info-value">5/10</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Potential biases affecting you:</label>
+                    <div class="quick-select">
+                        <label class="select-option">
+                            <input type="checkbox" name="biases" value="confirmation">
+                            <span>Confirmation bias</span>
+                        </label>
+                        <label class="select-option">
+                            <input type="checkbox" name="biases" value="optimism">
+                            <span>Overoptimism</span>
+                        </label>
+                        <label class="select-option">
+                            <input type="checkbox" name="biases" value="sunk-cost">
+                            <span>Sunk cost fallacy</span>
+                        </label>
+                        <label class="select-option">
+                            <input type="checkbox" name="biases" value="none">
+                            <span>None that I can see</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="submit-section">
+                <h3 style="margin-bottom: 1rem;">Get Your DDDM Readiness Score</h3>
+                <button class="btn" onclick="generateResults()">Analyze My Decision 🚀</button>
+            </div>
+        </div>
+
+        <div class="results" id="results">
+            <div class="results-header">
+                <div class="score-display" id="finalScore">85%</div>
+                <div class="score-label">Decision Readiness Score</div>
+            </div>
+            
+            <div class="insights">
+                <div id="dynamicInsights">
+                    <!-- Generated insights will go here -->
+                </div>
+                
+                <div class="action-items">
+                    <div class="action-title">🎯 Priority Actions</div>
+                    <ul class="action-list" id="actionList">
+                        <!-- Generated actions will go here -->
+                    </ul>
+                </div>
+                
+                <div class="try-again">
+                    <button class="btn btn-secondary" onclick="resetForm()">Try Another Decision</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Update slider values
+        function setupSliders() {
+            const sliders = [
+                { slider: 'metrics-clarity', display: 'metrics-value' },
+                { slider: 'strategic-fit', display: 'strategy-value' },
+                { slider: 'information-quality', display: 'info-value' }
+            ];
+            
+            sliders.forEach(({slider, display}) => {
+                const sliderEl = document.getElementById(slider);
+                const displayEl = document.getElementById(display);
+                
+                sliderEl.oninput = function() {
+                    displayEl.textContent = `${this.value}/10`;
+                }
+            });
+        }
+
+        function generateResults() {
+            // Collect form data
+            const decision = document.getElementById('decision').value;
+            const impact = document.querySelector('input[name="impact"]:checked')?.value;
+            const metricsClarity = parseInt(document.getElementById('metrics-clarity').value);
+            const mainMetric = document.getElementById('main-metric').value;
+            const mainRisk = document.getElementById('main-risk').value;
+            const riskProb = document.querySelector('input[name="risk-probability"]:checked')?.value;
+            const stakeholders = Array.from(document.querySelectorAll('input[name="stakeholders"]:checked')).map(cb => cb.value);
+            const strategicFit = parseInt(document.getElementById('strategic-fit').value);
+            const infoQuality = parseInt(document.getElementById('information-quality').value);
+            const biases = Array.from(document.querySelectorAll('input[name="biases"]:checked')).map(cb => cb.value);
+
+            // Calculate score
+            let score = 20; // Base score
+            score += metricsClarity * 2; // Max 20 points
+            score += mainMetric ? 10 : 0; // 10 points for having specific metric
+            score += mainRisk ? 10 : 0; // 10 points for risk identification
+            score += stakeholders.length * 5; // Max 20 points
+            score += strategicFit * 1.5; // Max 15 points
+            score += infoQuality * 1.5; // Max 15 points
+            
+            // Bonus/penalty adjustments
+            if (biases.includes('none')) score -= 5; // Penalty for not recognizing biases
+            if (riskProb === 'high' && !mainRisk) score -= 10; // Penalty for high risk without identification
+            if (impact === 'high' && metricsClarity < 7) score -= 5; // Penalty for high impact without clear metrics
+            
+            score = Math.max(10, Math.min(100, Math.round(score)));
+
+            // Generate insights
+            const insights = [];
+            const actions = [];
+
+            // Decision Quality insights
+            if (metricsClarity >= 8) {
+                insights.push({
+                    title: '✅ Strong Success Metrics',
+                    content: 'You have clear success criteria, which is essential for measuring decision effectiveness.'
+                });
+            } else {
+                insights.push({
+                    title: '⚠️ Unclear Success Metrics',
+                    content: 'Your success criteria need more definition. Vague goals make it hard to evaluate decision quality.'
+                });
+                actions.push('Define 2-3 specific, measurable success criteria');
+            }
+
+            // Risk Intelligence insights
+            if (mainRisk && riskProb) {
+                insights.push({
+                    title: '🛡️ Risk Awareness',
+                    content: `You've identified key risks with ${riskProb} probability. This proactive approach strengthens your decision.`
+                });
+            } else {
+                insights.push({
+                    title: '🔍 Risk Assessment Needed',
+                    content: 'More thorough risk analysis would improve your decision quality.'
+                });
+                actions.push('Identify and assess probability of top 3 risks');
+            }
+
+            // Value Creation insights
+            if (stakeholders.length >= 3) {
+                insights.push({
+                    title: '💎 Multi-Stakeholder Awareness',
+                    content: `You're considering ${stakeholders.length} stakeholder groups, showing comprehensive value thinking.`
+                });
+            } else {
+                insights.push({
+                    title: '👥 Limited Stakeholder View',
+                    content: 'Consider additional stakeholders who might be affected by this decision.'
+                });
+                actions.push('Identify at least 3 stakeholder groups affected');
+            }
+
+            // Process Quality insights
+            if (infoQuality >= 8) {
+                insights.push({
+                    title: '📊 Strong Information Base',
+                    content: 'You feel well-informed, which supports confident decision-making.'
+                });
+            } else {
+                insights.push({
+                    title: '📋 Information Gaps',
+                    content: 'You may need more data before making this decision with confidence.'
+                });
+                actions.push('Gather additional information in your weakest areas');
+            }
+
+            // Bias awareness
+            if (!biases.includes('none') && biases.length > 0) {
+                insights.push({
+                    title: '🧠 Bias Awareness',
+                    content: 'Recognizing potential biases shows mature decision-making self-awareness.'
+                });
+            } else {
+                actions.push('Consider how cognitive biases might affect your thinking');
+            }
+
+            // Display results
+            document.getElementById('finalScore').textContent = score + '%';
+            
+            const insightsContainer = document.getElementById('dynamicInsights');
+            insightsContainer.innerHTML = insights.map(insight => `
+                <div class="insight-item">
+                    <div class="insight-title">${insight.title}</div>
+                    <div class="insight-content">${insight.content}</div>
+                </div>
+            `).join('');
+
+            const actionsContainer = document.getElementById('actionList');
+            actionsContainer.innerHTML = actions.map(action => `<li>${action}</li>`).join('');
+            
+            // Show results
+            document.getElementById('results').classList.add('show');
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function resetForm() {
+            document.getElementById('quickForm').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('results').classList.remove('show');
+            
+            // Reset form fields
+            document.querySelectorAll('input, textarea').forEach(input => {
+                if (input.type === 'checkbox' || input.type === 'radio') {
+                    input.checked = false;
+                } else if (input.type === 'range') {
+                    input.value = 5;
+                    input.oninput(); // Update display
+                } else {
+                    input.value = '';
+                }
+            });
+        }
+
+        // Initialize
+        setupSliders();
+    </script>
+</body>
+</html>
